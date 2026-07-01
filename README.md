@@ -4,7 +4,7 @@ An editorial-celestial tarot experience: live card readings, an AI oracle with a
 personality, daily horoscopes, a sensor-based Frequency Reader, and multiple
 themed decks. Pure static site — **no build step, no dependencies.**
 
-Live demo: _add your Vercel URL here_
+**Live:** https://tarotreading-sigma.vercel.app
 
 ## Features
 
