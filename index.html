@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VESPER · Modern Tarot & the AI Oracle</title>
+<meta name="description" content="VESPER — a modern tarot house. Daily cards, love & career readings, horoscopes, and Vesper, an AI oracle with a mind of her own." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Marcellus+SC&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+
+<!-- Grain + starfield atmosphere -->
+<div class="grain" aria-hidden="true"></div>
+<canvas id="starfield" aria-hidden="true"></canvas>
+
+<!-- ============ NAV ============ -->
+<header class="nav" id="nav">
+  <a class="brand" href="#top">
+    <span class="brand-mark">✶</span>
+    <span class="brand-word">VESPER</span>
+  </a>
+  <nav class="nav-links">
+    <a href="#services">Readings</a>
+    <a href="#draw">Draw a Card</a>
+    <a href="frequency.html">Frequency</a>
+    <a href="#horoscopes">Horoscopes</a>
+    <a href="#oracle">The Oracle</a>
+    <a href="#membership">Membership</a>
+  </nav>
+  <a href="#oracle" class="nav-cta">Ask Vesper</a>
+  <button class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
+</header>
+
+<!-- ============ HERO ============ -->
+<main id="top">
+<section class="hero">
+  <div class="hero-eyebrow reveal">A modern tarot house · Est. under the evening star</div>
+  <h1 class="hero-title">
+    <span class="reveal" style="--d:.05s">Read the</span>
+    <span class="reveal italic" style="--d:.15s">night sky</span>
+    <span class="reveal" style="--d:.25s">of your life.</span>
+  </h1>
+  <p class="hero-sub reveal" style="--d:.4s">
+    Ancient cards, reimagined for now. Pull a reading in seconds, follow your stars,
+    and speak with <em>Vesper</em> — an AI oracle with a mind, a voice, and 78 cards
+    memorized by heart.
+  </p>
+  <div class="hero-actions reveal" style="--d:.55s">
+    <a href="#draw" class="btn btn-primary">Pull your card</a>
+    <a href="#oracle" class="btn btn-ghost">Meet the Oracle →</a>
+  </div>
+
+  <!-- Floating hero cards -->
+  <div class="hero-cards" aria-hidden="true">
+    <div class="hcard hcard-1"><span class="hc-glyph">XVII</span><span class="hc-name">The Star</span></div>
+    <div class="hcard hcard-2"><span class="hc-glyph">XVIII</span><span class="hc-name">The Moon</span></div>
+    <div class="hcard hcard-3"><span class="hc-glyph">XIX</span><span class="hc-name">The Sun</span></div>
+  </div>
+  <div class="scroll-cue reveal" style="--d:.8s">scroll · the deck is waiting</div>
+</section>
+
+<!-- ============ SERVICES ============ -->
+<section class="section" id="services">
+  <div class="sec-head">
+    <span class="eyebrow">The Readings</span>
+    <h2 class="sec-title">Everything the old fortune-tellers offered — <span class="italic">sharper, faster, kinder.</span></h2>
+    <p class="sec-lead">Eight ways to read your moment. Each one draws from a full, honest 78-card deck — no watered-down demos.</p>
+  </div>
+  <div class="grid services" id="services-grid">
+    <!-- filled by app.js -->
+  </div>
+</section>
+
+<!-- ============ DRAW A CARD (interactive) ============ -->
+<section class="section draw-section" id="draw">
+  <div class="sec-head">
+    <span class="eyebrow">Live Reading</span>
+    <h2 class="sec-title">Draw a card. Right now.</h2>
+    <p class="sec-lead">Choose your deck, pick a spread, set your intention, and turn the cards. Real decks, real interpretations.</p>
+  </div>
+
+  <div class="deck-picker" id="deck-picker" role="tablist" aria-label="Choose a deck"></div>
+  <p class="deck-blurb" id="deck-blurb"></p>
+
+  <div class="draw-controls">
+    <div class="spread-toggle" id="spread-toggle" role="tablist">
+      <button class="spread-opt is-active" data-spread="1" role="tab">Single Card</button>
+      <button class="spread-opt" data-spread="3" role="tab">Past · Present · Future</button>
+      <button class="spread-opt" data-spread="5" role="tab">Star Spread</button>
+    </div>
+    <input id="intention" class="intention-input" type="text" placeholder="Whisper your question (optional)…" maxlength="120" />
+    <button id="draw-btn" class="btn btn-primary draw-go">Shuffle &amp; Draw</button>
+  </div>
+
+  <div class="draw-stage" id="draw-stage" aria-live="polite">
+    <p class="draw-hint">Your cards will appear here.</p>
+  </div>
+</section>
+
+<!-- ============ THE ORACLE (AI agent) ============ -->
+<section class="section oracle-section" id="oracle">
+  <div class="oracle-wrap">
+    <aside class="oracle-persona">
+      <div class="persona-orb"><span>✶</span></div>
+      <span class="eyebrow">The AI Oracle</span>
+      <h2 class="persona-name">Vesper</h2>
+      <p class="persona-tag">The evening star</p>
+      <p class="persona-bio">
+        Elegant, warm, and quietly amused by everything. Vesper reads the full deck,
+        remembers your thread, and speaks in soft starlight — but she'll always give
+        you the plain truth. Ask her for a reading, a decision, or just help with
+        your account. She wears every hat.
+      </p>
+      <ul class="persona-skills">
+        <li>Full tarot readings &amp; spreads</li>
+        <li>Love, career &amp; yes-or-no guidance</li>
+        <li>Customer support &amp; account help</li>
+        <li>Available every hour of the night</li>
+      </ul>
+    </aside>
+
+    <div class="chat" id="chat">
+      <div class="chat-header">
+        <div class="chat-avatar">✶</div>
+        <div class="chat-id">
+          <strong>Vesper</strong>
+          <span class="chat-status"><i></i> online · reading now</span>
+        </div>
+      </div>
+      <div class="chat-log" id="chat-log" aria-live="polite"></div>
+      <div class="chat-suggest" id="chat-suggest">
+        <button class="chip" data-msg="Pull a card for my love life">Love reading</button>
+        <button class="chip" data-msg="Should I take the new job?">Yes / no</button>
+        <button class="chip" data-msg="Give me a three card reading">3-card spread</button>
+        <button class="chip" data-msg="How much does membership cost?">Pricing</button>
+        <button class="chip" data-msg="Who are you?">Who are you?</button>
+      </div>
+      <form class="chat-input" id="chat-form">
+        <input id="chat-text" type="text" placeholder="Ask Vesper anything…" autocomplete="off" />
+        <button type="submit" class="chat-send" aria-label="Send">↑</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOROSCOPES ============ -->
+<section class="section" id="horoscopes">
+  <div class="sec-head">
+    <span class="eyebrow">Today's Sky</span>
+    <h2 class="sec-title">Your daily horoscope</h2>
+    <p class="sec-lead">Tap your sign for today's reading, drawn fresh with the turning of the day.</p>
+  </div>
+  <div class="grid signs" id="signs-grid"></div>
+  <div class="horo-readout" id="horo-readout" hidden>
+    <button class="horo-close" id="horo-close" aria-label="Close">×</button>
+    <div class="horo-glyph" id="horo-glyph"></div>
+    <h3 class="horo-name" id="horo-name"></h3>
+    <p class="horo-dates" id="horo-dates"></p>
+    <p class="horo-text" id="horo-text"></p>
+  </div>
+</section>
+
+<!-- ============ MEMBERSHIP ============ -->
+<section class="section" id="membership">
+  <div class="sec-head">
+    <span class="eyebrow">Membership</span>
+    <h2 class="sec-title">Choose how deep you wander</h2>
+    <p class="sec-lead">Start free, forever. Upgrade only when the stars insist.</p>
+  </div>
+  <div class="grid plans">
+    <div class="plan">
+      <h3 class="plan-name">Curious</h3>
+      <p class="plan-price"><span>$0</span>/forever</p>
+      <ul class="plan-feats">
+        <li>Daily card, every day</li>
+        <li>One full 3-card reading daily</li>
+        <li>All 12 horoscopes</li>
+        <li>Chat with Vesper</li>
+      </ul>
+      <a href="#oracle" class="btn btn-ghost plan-cta">Begin free</a>
+    </div>
+    <div class="plan plan-feature">
+      <span class="plan-badge">Most chosen</span>
+      <h3 class="plan-name">Seeker</h3>
+      <p class="plan-price"><span>$9</span>/month</p>
+      <ul class="plan-feats">
+        <li>Everything in Curious</li>
+        <li>Unlimited readings &amp; spreads</li>
+        <li>The full Celtic Cross</li>
+        <li>Vesper on call, anytime</li>
+      </ul>
+      <a href="#oracle" class="btn btn-primary plan-cta">Start 7 days free</a>
+    </div>
+    <div class="plan">
+      <h3 class="plan-name">Oracle's Circle</h3>
+      <p class="plan-price"><span>$19</span>/month</p>
+      <ul class="plan-feats">
+        <li>Everything in Seeker</li>
+        <li>Saved reading journal</li>
+        <li>Monthly personal forecast</li>
+        <li>Priority answers from Vesper</li>
+      </ul>
+      <a href="#oracle" class="btn btn-ghost plan-cta">Join the Circle</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TESTIMONIALS ============ -->
+<section class="section testi-section">
+  <div class="testi-track" id="testi-track">
+    <figure class="testi"><blockquote>"I came for a party trick and stayed because Vesper genuinely helped me think. She's eerie in the best way."</blockquote><figcaption>— Mara L., Lisbon</figcaption></figure>
+    <figure class="testi"><blockquote>"The three-card reading before my interview said 'steer, don't drift.' I got the job. Coincidence? Sure. Still framed it."</blockquote><figcaption>— Devin R., Chicago</figcaption></figure>
+    <figure class="testi"><blockquote>"Cancelled once, refunded in a day, no guilt trip. Then I re-joined a week later because I missed her."</blockquote><figcaption>— Priya S., Toronto</figcaption></figure>
+    <figure class="testi"><blockquote>"Finally a tarot app that isn't all purple glow and fake mystery. It feels designed. It feels adult."</blockquote><figcaption>— Ken A., Berlin</figcaption></figure>
+  </div>
+</section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="foot-top">
+    <div class="foot-brand">
+      <span class="brand-mark">✶</span>
+      <span class="brand-word">VESPER</span>
+      <p class="foot-note">Ancient cards, read by the evening star.</p>
+    </div>
+    <div class="foot-cols">
+      <div><h4>Readings</h4><a href="#services">Daily Card</a><a href="#services">Love</a><a href="#services">Career</a><a href="#draw">Celtic Cross</a></div>
+      <div><h4>Explore</h4><a href="#horoscopes">Horoscopes</a><a href="#oracle">The Oracle</a><a href="#membership">Membership</a></div>
+      <div><h4>Care</h4><a href="#oracle">Support</a><a href="#membership">Pricing</a><a href="#oracle">Refunds</a></div>
+    </div>
+  </div>
+  <div class="foot-bottom">
+    <span>© 2026 VESPER · For entertainment &amp; reflection. You hold the last card.</span>
+    <span>care@vesper.stars</span>
+  </div>
+</footer>
+
+<!-- ============ SERVICE READING MODAL ============ -->
+<div class="modal" id="svc-modal" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <button class="modal-close" data-close aria-label="Close">×</button>
+    <span class="eyebrow" id="modal-eyebrow">Reading</span>
+    <h3 class="modal-title" id="modal-title">Reading</h3>
+    <p class="modal-lead" id="modal-lead"></p>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<script src="assets/js/tarot-data.js"></script>
+<script src="assets/js/decks.js"></script>
+<script src="assets/js/oracle.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

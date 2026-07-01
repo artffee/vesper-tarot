@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VESPER · The Frequency Reader</title>
+<meta name="description" content="Measure the frequency you're carrying — a pulse from your fingertip, a moment of your voice, and Vesper names your tone." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Marcellus+SC&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+
+<div class="grain" aria-hidden="true"></div>
+<canvas id="starfield" aria-hidden="true"></canvas>
+
+<header class="nav" id="nav">
+  <a class="brand" href="index.html#top">
+    <span class="brand-mark">✶</span>
+    <span class="brand-word">VESPER</span>
+  </a>
+  <nav class="nav-links">
+    <a href="index.html#services">Readings</a>
+    <a href="index.html#draw">Draw a Card</a>
+    <a href="index.html#horoscopes">Horoscopes</a>
+    <a href="frequency.html" class="is-current">Frequency</a>
+    <a href="index.html#oracle">The Oracle</a>
+  </nav>
+  <a href="index.html#membership" class="nav-cta">Membership</a>
+  <button class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
+</header>
+
+<main class="freq-main">
+  <section class="freq-stage" id="freq-app">
+    <!-- rendered by frequency.js -->
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="foot-bottom" style="border:none;margin-top:0;">
+    <span>© 2026 VESPER · The Frequency Reader is for reflection &amp; entertainment. Not medical advice.</span>
+    <span>care@vesper.stars</span>
+  </div>
+</footer>
+
+<script src="assets/js/frequency.js"></script>
+<script>
+/* mini starfield + nav scroll, standalone for this page */
+(function () {
+  var c = document.getElementById("starfield"), ctx = c.getContext("2d"), stars = [], w, h;
+  function resize() {
+    w = c.width = innerWidth; h = c.height = innerHeight;
+    var count = Math.min(160, Math.floor(w * h / 9000));
+    stars = Array.from({ length: count }, function () {
+      return { x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.3 + 0.2,
+        a: Math.random() * 0.6 + 0.2, tw: Math.random() * 0.02 + 0.004, d: Math.random() < .5 ? 1 : -1 };
+    });
+  }
+  function tick() {
+    ctx.clearRect(0, 0, w, h);
+    stars.forEach(function (s) {
+      s.a += s.tw * s.d; if (s.a > .85 || s.a < .15) s.d *= -1;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.283);
+      ctx.fillStyle = "rgba(226,210,170," + s.a + ")"; ctx.fill();
+    });
+    requestAnimationFrame(tick);
+  }
+  resize(); addEventListener("resize", resize);
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) tick();
+  var nav = document.getElementById("nav");
+  addEventListener("scroll", function () { nav.classList.toggle("scrolled", scrollY > 40); }, { passive: true });
+  var t = document.getElementById("nav-toggle");
+  if (t) {
+    t.addEventListener("click", function () {
+      var open = nav.classList.toggle("open");
+      t.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    Array.prototype.forEach.call(nav.querySelectorAll(".nav-links a"), function (a) {
+      a.addEventListener("click", function () { nav.classList.remove("open"); });
+    });
+  }
+})();
+</script>
+</body>
+</html>
