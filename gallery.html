@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VESPER · Card Gallery (preview)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Marcellus+SC&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/css/styles.css" />
+<style>
+  /* gallery-only chrome — the cards themselves reuse styles.css */
+  body { padding: 0; }
+  .gwrap { max-width: 1200px; margin: 0 auto; padding: 3rem 1.5rem 6rem; }
+  .ghead { text-align: center; margin-bottom: 2rem; }
+  .ghead h1 { font-family: var(--display); font-weight: 400; font-size: 2.4rem; margin: 0 0 .4rem; }
+  .ghead p { color: var(--ivory-dim); margin: 0; }
+  .gtools { display: flex; flex-wrap: wrap; gap: .8rem; align-items: center; justify-content: center; margin: 1.6rem 0 .6rem; }
+  .gtools input[type="search"] {
+    background: rgba(20,27,49,.5); border: 1px solid var(--line-soft); border-radius: 24px;
+    color: var(--ivory); font-family: var(--serif); font-size: 1rem; padding: .6rem 1.2rem; min-width: 260px;
+  }
+  .gtools label { color: var(--ivory-dim); font-size: .92rem; display: inline-flex; gap: .4rem; align-items: center; cursor: pointer; }
+  .gcount { color: var(--ivory-faint); font-size: .82rem; text-align: center; margin-bottom: 2.4rem; }
+  .gdeck-title {
+    font-family: var(--caps); letter-spacing: .2em; text-transform: uppercase; color: var(--gold);
+    font-size: .8rem; margin: 3rem 0 1.4rem; border-bottom: 1px solid var(--line-soft); padding-bottom: .6rem;
+  }
+  .ggrid { display: flex; flex-wrap: wrap; gap: 2rem 1.6rem; justify-content: center; }
+  /* one card cell: the face + both meanings for proofreading */
+  .gcell { width: 168px; }
+  .gcell .tcard { opacity: 1; animation: none; }
+  .gcell .tcard-inner { transition: none; cursor: default; }
+  .gmeanings { margin-top: .8rem; font-size: .8rem; line-height: 1.5; }
+  .gmeanings .gm { color: var(--ivory-dim); margin: .3rem 0; }
+  .gmeanings .gm b { color: var(--gold-bright); font-weight: 500; font-family: var(--caps); letter-spacing: .08em; font-size: .62rem; text-transform: uppercase; display: block; }
+  .gnew { outline: 2px solid var(--rose); outline-offset: 4px; border-radius: 12px; }
+  .gback { position: fixed; top: 1.2rem; left: 1.4rem; z-index: 20; }
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<canvas id="starfield" aria-hidden="true"></canvas>
+
+<a class="nav-cta gback" href="index.html">← Back to site</a>
+
+<div class="gwrap">
+  <div class="ghead">
+    <h1>Card Gallery</h1>
+    <p>Every card, face-up, in the site's real styling — a preview workbench (not linked from the live site).</p>
+    <div class="gtools">
+      <input type="search" id="gsearch" placeholder="Filter by name, suit, keyword…" autocomplete="off" />
+      <label><input type="checkbox" id="grev" /> Show reversed</label>
+    </div>
+    <div class="gcount" id="gcount"></div>
+  </div>
+  <div id="groot"></div>
+</div>
+
+<!-- same data the site uses -->
+<script src="assets/js/tarot-data.js"></script>
+<script src="assets/js/decks.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // Build the list of decks to show. Prefer the site's deck registry if present.
+  var DECKS = window.VESPER_DECKS;
+  var groups = [];
+  if (DECKS && typeof DECKS === "object") {
+    Object.keys(DECKS).forEach(function (k) {
+      groups.push({ title: DECKS[k].name + "  ·  " + DECKS[k].kind, cards: DECKS[k].cards || [] });
+    });
+  } else {
+    groups.push({ title: "Classic Tarot · 78 cards", cards: window.VESPER_DECK || [] });
+  }
+
+  var root = document.getElementById("groot");
+  var search = document.getElementById("gsearch");
+  var revToggle = document.getElementById("grev");
+  var countEl = document.getElementById("gcount");
+
+  function suitLabel(card) {
+    if (card.label) return card.label;
+    if (card.arcana === "major") return "Major Arcana";
+    if (card.suit) return card.suit + " · " + card.element;
+    return "";
+  }
+
+  // Render one card cell: the front face (upright or reversed) + both meanings.
+  function cell(card) {
+    var reversed = revToggle.checked && !card.bare;  // full-art cards never reverse
+    var el = document.createElement("div");
+    el.className = "gcell";
+    var meaning = reversed ? (card.rev || "") : (card.up || "");
+    var art = card.img
+      ? '<img class="tf-img" src="' + card.img + '" alt="' + card.name + '" loading="lazy" />'
+      : '<span class="tf-glyph">' + (card.glyph || "✶") + '</span>';
+    el.innerHTML =
+      '<div class="tcard flipped">' +
+        '<div class="tcard-inner">' +
+          '<div class="tface tface-front ' + (card.img ? "has-img " : "") + (card.bare ? "bare " : "") + (reversed ? "reversed" : "") + '">' +
+            (reversed ? '<span class="tf-rev">Reversed</span>' : "") +
+            art +
+            '<span class="tf-name">' + card.name + '</span>' +
+            '<span class="tf-suit">' + suitLabel(card) + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="gmeanings">' +
+        '<p class="gm"><b>Upright</b>' + (card.up || "—") + '</p>' +
+        '<p class="gm"><b>Reversed</b>' + (card.rev || "—") + '</p>' +
+      '</div>';
+    return el;
+  }
+
+  function matches(card, q) {
+    if (!q) return true;
+    var hay = [card.name, card.suit, card.element, card.label, (card.key || []).join(" "), card.up, card.rev]
+      .filter(Boolean).join(" ").toLowerCase();
+    return hay.indexOf(q) !== -1;
+  }
+
+  function render() {
+    var q = search.value.trim().toLowerCase();
+    root.innerHTML = "";
+    var shown = 0, total = 0;
+    groups.forEach(function (g) {
+      total += g.cards.length;
+      var visible = g.cards.filter(function (c) { return matches(c, q); });
+      if (!visible.length) return;
+      var h = document.createElement("h2");
+      h.className = "gdeck-title";
+      h.textContent = g.title + "  (" + visible.length + ")";
+      root.appendChild(h);
+      var grid = document.createElement("div");
+      grid.className = "ggrid";
+      visible.forEach(function (c) { grid.appendChild(cell(c)); shown++; });
+      root.appendChild(grid);
+    });
+    countEl.textContent = shown + " of " + total + " cards" + (q ? " matching “" + q + "”" : "");
+  }
+
+  search.addEventListener("input", render);
+  revToggle.addEventListener("change", render);
+  render();
+
+  /* tiny starfield so the backdrop matches the site */
+  (function () {
+    var c = document.getElementById("starfield"); if (!c) return;
+    var ctx = c.getContext("2d"), stars = [], w, h;
+    function resize() {
+      w = c.width = window.innerWidth; h = c.height = window.innerHeight;
+      var n = Math.min(180, Math.floor((w * h) / 9000));
+      stars = Array.from({ length: n }, function () {
+        return { x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.3 + 0.2,
+                 a: Math.random() * 0.6 + 0.2, tw: Math.random() * 0.02 + 0.004, dir: Math.random() < 0.5 ? 1 : -1 };
+      });
+    }
+    function tick() {
+      ctx.clearRect(0, 0, w, h);
+      for (var i = 0; i < stars.length; i++) {
+        var s = stars[i]; s.a += s.tw * s.dir;
+        if (s.a > 0.85 || s.a < 0.15) s.dir *= -1;
+        ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(226, 210, 170, " + s.a + ")"; ctx.fill();
+      }
+      requestAnimationFrame(tick);
+    }
+    resize(); window.addEventListener("resize", resize);
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) tick();
+  })();
+})();
+</script>
+</body>
+</html>

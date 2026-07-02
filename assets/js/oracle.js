@@ -24,7 +24,7 @@
     for (let i = 0; i < count && pool.length; i++) {
       const idx = rand(pool.length);
       const card = Object.assign({}, pool.splice(idx, 1)[0]);
-      card.reversed = Math.random() < 0.32;
+      card.reversed = false; // reversals disabled — cards always draw upright
       picked.push(card);
     }
     return picked;

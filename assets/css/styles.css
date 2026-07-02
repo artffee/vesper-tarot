@@ -258,24 +258,99 @@ main, .nav, .footer { position: relative; z-index: 2; }
   align-items: center; justify-content: center; padding: 1rem; text-align: center;
   box-shadow: 0 24px 44px -22px rgba(0,0,0,.85);
 }
+/* ---- Card back: engraved mandala ------------------------------ */
 .tface-back {
   background:
-    radial-gradient(circle at 50% 40%, rgba(201,168,106,.16), transparent 55%),
-    repeating-linear-gradient(45deg, rgba(201,168,106,.05) 0 8px, transparent 8px 16px),
-    linear-gradient(160deg, #182142, #0a0d18);
+    radial-gradient(circle at 50% 42%, rgba(228,201,138,.20), transparent 46%),
+    repeating-conic-gradient(from 0deg at 50% 42%, rgba(201,168,106,.10) 0deg 6deg, transparent 6deg 12deg),
+    repeating-linear-gradient(45deg, rgba(201,168,106,.045) 0 7px, transparent 7px 14px),
+    linear-gradient(160deg, #1a2446, #090c17);
 }
-.tface-back .tb-star { font-size: 2.4rem; color: var(--gold); opacity: .8; }
-.tface-back::before { content: ""; position: absolute; inset: 8px; border: 1px solid var(--line-soft); border-radius: 6px; }
+.tface-back::before {
+  content: ""; position: absolute; inset: 9px; border-radius: 6px; border: 1px solid var(--line);
+  box-shadow: inset 0 0 0 3px rgba(9,12,23,.55), inset 0 0 0 4px var(--line-soft);
+}
+.tface-back .tb-star {
+  position: relative; z-index: 1; font-size: 1.9rem; color: var(--gold-bright);
+  width: 60px; height: 60px; display: grid; place-items: center; border-radius: 50%;
+  border: 1px solid var(--line);
+  background: radial-gradient(circle at 50% 40%, rgba(228,201,138,.22), rgba(201,168,106,.03));
+  box-shadow: 0 0 26px -6px rgba(201,168,106,.55), inset 0 0 14px -4px rgba(228,201,138,.5);
+  text-shadow: 0 0 10px rgba(228,201,138,.7);
+}
+
+/* ---- Card front: gilded frame + medallion --------------------- */
 .tface-front {
   transform: rotateY(180deg);
-  background: linear-gradient(165deg, #1b2444 0%, #0c1122 100%);
+  background:
+    radial-gradient(120% 78% at 50% 30%, rgba(228,201,138,.15), transparent 58%),
+    radial-gradient(100% 60% at 50% 122%, rgba(184,121,140,.10), transparent 60%),
+    linear-gradient(165deg, #1d2748 0%, #0b1020 100%);
 }
-.tface-front::before { content: ""; position: absolute; inset: 7px; border: 1px solid var(--line-soft); border-radius: 6px; pointer-events: none; }
+/* double gilded keyline frame */
+.tface-front::before {
+  content: ""; position: absolute; inset: 7px; border-radius: 6px; pointer-events: none;
+  border: 1px solid var(--line);
+  box-shadow: inset 0 0 0 4px rgba(9,12,23,.5), inset 0 0 0 5px var(--line-soft),
+              inset 0 0 30px -8px rgba(228,201,138,.16);
+}
+/* four corner dots */
+.tface-front::after {
+  content: ""; position: absolute; inset: 12px; pointer-events: none; opacity: .85;
+  background:
+    radial-gradient(circle, var(--gold) 42%, transparent 46%) 0 0 / 5px 5px no-repeat,
+    radial-gradient(circle, var(--gold) 42%, transparent 46%) 100% 0 / 5px 5px no-repeat,
+    radial-gradient(circle, var(--gold) 42%, transparent 46%) 0 100% / 5px 5px no-repeat,
+    radial-gradient(circle, var(--gold) 42%, transparent 46%) 100% 100% / 5px 5px no-repeat;
+}
 .tface-front.reversed .tf-glyph, .tface-front.reversed .tf-name { transform: rotate(180deg); }
-.tf-glyph { font-family: var(--display); font-size: 2.2rem; color: var(--gold-bright); margin-bottom: .4rem; }
-.tf-name { font-family: var(--display); font-size: 1.05rem; line-height: 1.15; }
-.tf-suit { position: absolute; bottom: 12px; font-family: var(--caps); font-size: .55rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ivory-faint); }
-.tf-rev { position: absolute; top: 12px; font-family: var(--caps); font-size: .5rem; letter-spacing: .14em; text-transform: uppercase; color: var(--rose); }
+/* symbol medallion */
+.tf-glyph {
+  position: relative; z-index: 1; font-family: var(--display); font-size: 1.9rem; color: var(--gold-bright);
+  width: 74px; height: 74px; display: grid; place-items: center; border-radius: 50%; margin-bottom: .75rem;
+  border: 1px solid var(--line);
+  background: radial-gradient(circle at 50% 38%, rgba(228,201,138,.20), rgba(201,168,106,.02));
+  box-shadow: 0 0 30px -8px rgba(201,168,106,.6), inset 0 0 16px -6px rgba(228,201,138,.55);
+  text-shadow: 0 0 12px rgba(228,201,138,.5);
+}
+.tf-name {
+  position: relative; z-index: 1; font-family: var(--display); font-size: 1.06rem; line-height: 1.18;
+  color: var(--ivory); padding: 0 .5rem;
+}
+.tf-name::after { content: "✦"; display: block; margin: .5rem auto 0; font-size: .5rem; color: var(--gold); opacity: .85; }
+.tf-suit {
+  position: absolute; bottom: 14px; left: 0; right: 0; z-index: 1;
+  display: flex; align-items: center; justify-content: center; gap: .5rem;
+  font-family: var(--caps); font-size: .54rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-bright);
+}
+.tf-suit::before, .tf-suit::after { content: ""; height: 1px; width: 15px; background: linear-gradient(90deg, transparent, var(--line)); }
+.tf-suit::after { background: linear-gradient(90deg, var(--line), transparent); }
+.tf-rev { position: absolute; top: 12px; z-index: 3; font-family: var(--caps); font-size: .5rem; letter-spacing: .14em; text-transform: uppercase; color: var(--rose); }
+
+/* ---- Image-based card faces ----------------------------------- */
+/* When a card supplies `img`, the art fills the face and the name sits
+   on a gradient banner across the bottom. Falls back to the glyph face. */
+.tface-front.has-img { padding: 0; justify-content: flex-end; overflow: hidden; }
+.tface-front.has-img .tf-img {
+  position: absolute; inset: 7px; width: calc(100% - 14px); height: calc(100% - 14px);
+  object-fit: cover; border-radius: 6px; z-index: 1;
+}
+.tface-front.has-img.reversed .tf-img { transform: rotate(180deg); }
+/* full-art cards: the title/verse is baked into the image, so hide overlays */
+.tface-front.bare .tf-name, .tface-front.bare .tf-suit { display: none; }
+.tface-front.bare.has-img .tf-img { inset: 0; width: 100%; height: 100%; border-radius: 8px; }
+.tface-front.has-img .tf-name {
+  position: relative; z-index: 2; width: 100%; padding: 1.6rem .5rem .7rem;
+  color: var(--ivory); text-shadow: 0 1px 6px rgba(0,0,0,.9);
+  background: linear-gradient(180deg, transparent, rgba(8,10,18,.86) 62%);
+  border-bottom-left-radius: 7px; border-bottom-right-radius: 7px;
+}
+.tface-front.has-img .tf-suit { z-index: 2; color: var(--gold-bright); text-shadow: 0 1px 4px rgba(0,0,0,.9); }
+/* image mini-cards in the chat */
+.mini-card.has-img { padding: 0; overflow: hidden; }
+.mini-card.has-img .mc-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.mini-card.has-img.rev .mc-img { transform: rotate(180deg); }
+.mini-card { position: relative; }
 .tcard-read { margin-top: .8rem; font-size: .92rem; line-height: 1.5; color: var(--ivory-dim); text-align: center; max-width: 168px; }
 
 /* ---- Oracle / Chat -------------------------------------------- */
@@ -488,6 +563,62 @@ main, .nav, .footer { position: relative; z-index: 2; }
 }
 .numo-title { font-family: var(--display); font-size: 1.6rem; margin-bottom: .8rem; }
 .numo-text { color: var(--ivory-dim); line-height: 1.7; max-width: 520px; margin: 0 auto; }
+.numo-toplabel { display: block; font-family: var(--caps); font-size: .64rem; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); margin-bottom: 1rem; }
+.form-hint { font-family: var(--serif); text-transform: none; letter-spacing: 0; color: var(--ivory-faint); font-size: .82rem; }
+/* name-based number tiles */
+.numo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 2rem; width: 100%; }
+.numo-tile { display: flex; gap: 1rem; align-items: flex-start; padding: 1.1rem; border: 1px solid var(--line-soft); border-radius: 10px; background: rgba(20,27,49,.4); text-align: left; }
+.numo-tile-num {
+  flex: 0 0 auto; font-family: var(--display); font-size: 1.9rem; color: var(--gold-bright); line-height: 1;
+  width: 54px; height: 54px; display: grid; place-items: center; border-radius: 50%;
+  border: 1px solid var(--line); background: radial-gradient(circle at 40% 35%, rgba(228,201,138,.18), transparent 62%);
+  box-shadow: inset 0 0 14px -6px rgba(228,201,138,.5);
+}
+.numo-tile-label { display: block; font-family: var(--caps); font-size: .58rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); margin-bottom: .2rem; }
+.numo-tile-word { display: block; font-family: var(--display); font-size: 1.05rem; color: var(--ivory); margin-bottom: .35rem; }
+.numo-tile-text { color: var(--ivory-dim); font-size: .9rem; line-height: 1.55; margin: 0; }
+.numo-nametip { margin-top: 1.4rem; text-align: center; color: var(--ivory-faint); font-style: italic; font-size: .92rem; }
+
+/* ---- Support / Donate ----------------------------------------- */
+.support-section { display: flex; justify-content: center; }
+.support-card {
+  max-width: 620px; width: 100%; text-align: center; padding: 3rem 2.4rem;
+  border: 1px solid var(--line); border-radius: 14px;
+  background:
+    radial-gradient(500px 300px at 50% 0%, rgba(201,168,106,.12), transparent 60%),
+    linear-gradient(180deg, rgba(20,27,49,.7), rgba(10,13,24,.5));
+  box-shadow: 0 30px 60px -30px rgba(0,0,0,.8);
+}
+.support-title { font-family: var(--display); font-weight: 400; font-size: 2.4rem; margin: .4rem 0 1rem; }
+.support-text { color: var(--ivory-dim); line-height: 1.75; max-width: 480px; margin: 0 auto 2rem; }
+.support-btn { display: inline-flex; align-items: center; gap: .5rem; }
+.support-note { margin-top: 1rem; font-size: .78rem; color: var(--ivory-faint); letter-spacing: .02em; }
+
+/* ---- Birth chart / astrology ---------------------------------- */
+.astro-hero { display: flex; align-items: center; gap: 1.3rem; text-align: left; margin-bottom: 1.2rem; }
+.astro-sun-glyph {
+  flex: 0 0 auto; width: 92px; height: 92px; display: grid; place-items: center; border-radius: 50%;
+  font-size: 3rem; color: var(--gold-bright); border: 1px solid var(--line);
+  background: radial-gradient(circle at 42% 36%, rgba(228,201,138,.28), rgba(201,168,106,.03));
+  box-shadow: 0 0 44px -10px rgba(201,168,106,.6), inset 0 0 20px -6px rgba(228,201,138,.5);
+}
+.astro-kicker { font-family: var(--caps); font-size: .64rem; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); }
+.astro-sign { font-family: var(--display); font-size: 2.2rem; margin: .1rem 0 .5rem; line-height: 1; }
+.astro-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.astro-chips span { font-family: var(--caps); font-size: .58rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ivory-dim); border: 1px solid var(--line-soft); border-radius: 20px; padding: .3rem .7rem; }
+.astro-profile { color: var(--ivory-dim); line-height: 1.75; margin: 0 0 1.4rem; }
+.astro-note, .astro-loading { color: var(--ivory-faint); font-style: italic; line-height: 1.6; background: rgba(20,27,49,.4); border: 1px solid var(--line-soft); border-radius: 10px; padding: 1rem 1.2rem; }
+.astro-note strong { color: var(--gold-bright); font-style: normal; }
+.astro-meta { margin-top: 1rem; font-size: .78rem; color: var(--ivory-faint); letter-spacing: .04em; }
+.astro-bigthree { display: flex; gap: 1rem; margin: .4rem 0 1.6rem; }
+.astro-bt { flex: 1; text-align: center; border: 1px solid var(--line); border-radius: 10px; padding: 1rem .5rem; background: rgba(20,27,49,.4); }
+.astro-bt span { display: block; font-family: var(--caps); font-size: .58rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); margin-bottom: .35rem; }
+.astro-bt strong { font-family: var(--display); font-size: 1.2rem; font-weight: 400; color: var(--ivory); }
+.astro-subhead { font-family: var(--caps); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); margin: 0 0 .8rem; }
+.astro-table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.astro-table th { text-align: left; font-family: var(--caps); font-size: .58rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ivory-faint); padding: .5rem .6rem; border-bottom: 1px solid var(--line); }
+.astro-table td { padding: .55rem .6rem; border-bottom: 1px solid var(--line-soft); color: var(--ivory-dim); }
+.astro-table td:first-child { color: var(--ivory); font-family: var(--display); }
 
 /* ===============================================================
    THE FREQUENCY READER

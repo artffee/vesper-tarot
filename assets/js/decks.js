@@ -16,7 +16,7 @@
   // expand compact {n,k,u,r,a} entries into full card objects
   function build(list, glyph, label) {
     return list.map((c) => ({
-      name: c.n, arcana: "oracle", glyph: glyph, label: label, court: false,
+      name: c.n, arcana: "oracle", glyph: glyph, label: label, court: false, img: c.i,
       key: c.k, up: c.u, rev: c.r, advice: c.a, love: c.u, career: c.u
     }));
   }

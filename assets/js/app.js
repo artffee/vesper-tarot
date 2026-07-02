@@ -80,6 +80,7 @@
     { g: "✧", n: "Celtic Cross", t: "The deep read", d: "Ten cards, the whole landscape of a question — the classic spread, unhurried and complete.", act: { type: "spread", kind: "celtic" } },
     { g: "☾", n: "Horoscopes", t: "Your daily sky", d: "All twelve signs, read fresh with the turning of each day. Find your stars, then let Vesper go deeper.", act: { type: "scroll", target: "horoscopes" } },
     { g: "✺", n: "Numerology", t: "Your numbers", d: "The quiet math beneath a name and a birthday — your life path, laid bare.", act: { type: "numerology" } },
+    { g: "⊛", n: "Birth Chart", t: "Your natal sky", d: "The exact sky at your first breath — your Sun, and with birth time and place, your Moon, Rising, and the wandering planets.", act: { type: "astrology" } },
     { g: "☽", n: "Dream Reading", t: "The night's messages", d: "Tell Vesper what you saw while sleeping; she'll draw the card that answers it.", act: { type: "dream" } },
     { g: "◉", n: "Frequency Reader", t: "New · body + voice", d: "A pulse from your fingertip, a moment of your voice — Vesper names the frequency you're carrying tonight, and the tone that matches it.", act: { type: "link", href: "frequency.html" } }
   ];
@@ -157,7 +158,7 @@
     const pool = source.slice(), out = [];
     for (let i = 0; i < count && pool.length; i++) {
       const card = Object.assign({}, pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
-      card.reversed = Math.random() < 0.32;
+      card.reversed = false; // reversals disabled — cards always draw upright
       out.push(card);
     }
     return out;
@@ -174,13 +175,17 @@
     const wrap = document.createElement("div");
     wrap.className = "tcard";
     wrap.style.setProperty("--cd", (index * 0.12) + "s");
+    // full-art cards carry their text in the image, so they never render reversed
+    const reversed = card.reversed && !card.bare;
     wrap.innerHTML =
       `<div class="tcard-pos">${position || ""}</div>
        <div class="tcard-inner">
          <div class="tface tface-back"><span class="tb-star">✶</span></div>
-         <div class="tface tface-front ${card.reversed ? "reversed" : ""}">
-           ${card.reversed ? '<span class="tf-rev">Reversed</span>' : ""}
-           <span class="tf-glyph">${card.glyph || "✶"}</span>
+         <div class="tface tface-front ${card.img ? "has-img" : ""} ${card.bare ? "bare" : ""} ${reversed ? "reversed" : ""}">
+           ${reversed ? '<span class="tf-rev">Reversed</span>' : ""}
+           ${card.img
+             ? `<img class="tf-img" src="${card.img}" alt="${escapeHtml(card.name)}" loading="lazy" />`
+             : `<span class="tf-glyph">${card.glyph || "✶"}</span>`}
            <span class="tf-name">${card.name}</span>
            <span class="tf-suit">${suitLabel(card)}</span>
          </div>
@@ -244,9 +249,11 @@
   function miniCards(cards) {
     if (!cards || !cards.length) return "";
     return `<div class="chat-cards">` + cards.map((c, i) =>
-      `<div class="mini-card ${c.reversed ? "rev" : ""}" style="--cd:${i * 0.1}s">
-         <span class="mc-glyph">${c.glyph || "✶"}</span>
-         <span class="mc-name">${c.name}</span>
+      `<div class="mini-card ${c.img ? "has-img" : ""} ${c.reversed && !c.bare ? "rev" : ""}" style="--cd:${i * 0.1}s">
+         ${c.img
+           ? `<img class="mc-img" src="${c.img}" alt="${escapeHtml(c.name)}" loading="lazy" />`
+           : `<span class="mc-glyph">${c.glyph || "✶"}</span>
+              <span class="mc-name">${c.name}</span>`}
        </div>`).join("") + `</div>`;
   }
 
@@ -392,6 +399,7 @@
     if (a.type === "spread") renderSpread(s);
     else if (a.type === "yesno") renderYesNoForm(s);
     else if (a.type === "numerology") renderNumerologyForm(s);
+    else if (a.type === "astrology") renderAstrologyForm(s);
     else if (a.type === "dream") renderDreamForm(s);
   }
 
@@ -464,42 +472,285 @@
     22: { title: "22 · The Master Builder", text: "The rarest path: big visions made real on the earth. You can build things that outlast you. The pressure is heavy — pace yourself, and dream anyway." },
     33: { title: "33 · The Master Teacher", text: "Love made into service and wisdom. You're here to uplift on a grand scale. Lead with the heart; let compassion, not obligation, set your pace." }
   };
+  // Short archetype word per number, reused across the name-based numbers
+  const NUM_WORD = {
+    1: "the Leader", 2: "the Peacemaker", 3: "the Communicator", 4: "the Builder",
+    5: "the Free Spirit", 6: "the Nurturer", 7: "the Seeker", 8: "the Powerhouse",
+    9: "the Humanitarian", 11: "the Intuitive (Master 11)", 22: "the Master Builder (Master 22)",
+    33: "the Master Teacher (Master 33)"
+  };
+  const NUM_TRAIT = {
+    1: "independent, driven, original", 2: "diplomatic, sensitive, cooperative",
+    3: "expressive, creative, sociable", 4: "grounded, disciplined, dependable",
+    5: "adventurous, adaptable, restless", 6: "caring, responsible, devoted",
+    7: "analytical, spiritual, private", 8: "ambitious, capable, commanding",
+    9: "compassionate, idealistic, generous", 11: "visionary, inspired, highly intuitive",
+    22: "visionary and practical at once", 33: "devoted, healing, uplifting"
+  };
+  // Pythagorean letter → value
+  const LETTERVAL = { a:1,j:1,s:1, b:2,k:2,t:2, c:3,l:3,u:3, d:4,m:4,v:4, e:5,n:5,w:5,
+                      f:6,o:6,x:6, g:7,p:7,y:7, h:8,q:8,z:8, i:9,r:9 };
+  const VOWELS = "aeiou";
+
+  function letters(name) { return (name || "").toLowerCase().replace(/[^a-z]/g, "").split(""); }
+  function sumWhere(name, keep) {
+    return letters(name).reduce((a, c) => (keep(c) ? a + (LETTERVAL[c] || 0) : a), 0);
+  }
+  function nameNumber(name, mode) {
+    var raw;
+    if (mode === "vowels") raw = sumWhere(name, (c) => VOWELS.indexOf(c) !== -1);
+    else if (mode === "consonants") raw = sumWhere(name, (c) => VOWELS.indexOf(c) === -1);
+    else raw = sumWhere(name, () => true);
+    return raw ? reduceNum(raw) : 0;
+  }
 
   function renderNumerologyForm(s) {
     modalEyebrow.textContent = "Numerology";
-    modalTitle.textContent = "Find your Life Path number";
-    modalLead.textContent = "Your birth date reduces to a single guiding number. Enter it below.";
+    modalTitle.textContent = "Your numbers";
+    modalLead.textContent = "Your birth date and full birth name reduce to the numbers that map your life. Name is optional — enter it to unlock the full profile.";
     modalActions.innerHTML = "";
     modalBody.innerHTML =
       `<form class="modal-form" id="numo-form">
+         <label for="numo-name">Full birth name <span class="form-hint">(as on your birth certificate)</span></label>
+         <input id="numo-name" type="text" placeholder="e.g. Ada Marie Lovelace" autocomplete="off" />
          <label for="numo-date">Your date of birth</label>
          <input id="numo-date" type="date" required max="2026-12-31" />
-         <button type="submit" class="btn btn-primary">Reveal my number</button>
+         <button type="submit" class="btn btn-primary">Reveal my numbers</button>
        </form>`;
     document.getElementById("numo-form").addEventListener("submit", (e) => {
       e.preventDefault();
       const v = document.getElementById("numo-date").value;
-      if (v) renderNumerologyResult(s, v);
+      const nm = document.getElementById("numo-name").value.trim();
+      if (v) renderNumerologyResult(s, v, nm);
     });
+    setTimeout(() => document.getElementById("numo-name").focus(), 100);
   }
 
-  function renderNumerologyResult(s, dateStr) {
-    const parts = dateStr.split("-").map(Number);
-    const num = reduceNum(reduceNum(parts[1]) + reduceNum(parts[2]) + reduceNum(parts[0]));
-    const info = NUMO[num] || NUMO[9];
+  function numTile(label, num, blurb) {
+    if (!num) return "";
+    const word = NUM_WORD[num] || "";
+    return `<div class="numo-tile">
+        <div class="numo-tile-num">${num}</div>
+        <div class="numo-tile-body">
+          <span class="numo-tile-label">${label}</span>
+          <strong class="numo-tile-word">${word}</strong>
+          <p class="numo-tile-text">${blurb}</p>
+        </div>
+      </div>`;
+  }
+
+  function renderNumerologyResult(s, dateStr, name) {
+    const parts = dateStr.split("-").map(Number); // [yyyy, mm, dd]
+    const life = reduceNum(reduceNum(parts[1]) + reduceNum(parts[2]) + reduceNum(parts[0]));
+    const birthday = reduceNum(parts[2]);
+    const info = NUMO[life] || NUMO[9];
+
+    const expression = nameNumber(name, "all");
+    const soul = nameNumber(name, "vowels");
+    const persona = nameNumber(name, "consonants");
+
+    const tr = (n) => NUM_TRAIT[n] || "";
     modalEyebrow.textContent = "Numerology";
-    modalTitle.textContent = "Your Life Path";
-    modalLead.textContent = "";
+    modalTitle.textContent = "Your numbers";
+    modalLead.textContent = name ? name : "";
+
+    let tiles = "";
+    tiles += numTile("Expression · your natural talents", expression, `How you're built to act in the world: ${tr(expression)}. This is the toolkit you were handed.`);
+    tiles += numTile("Soul Urge · your heart's craving", soul, `What you secretly want most: to live as someone ${tr(soul)}. It's the quiet engine beneath your choices.`);
+    tiles += numTile("Personality · your first impression", persona, `The you that others meet before they know you — you read as ${tr(persona)}.`);
+    tiles += numTile("Birthday · your gift", birthday, `A specific talent you carry lightly: the flair of ${tr(birthday)}.`);
+
+    const namePrompt = name ? "" :
+      `<p class="numo-nametip">Add your full birth name and draw again to unlock your Expression, Soul Urge & Personality numbers.</p>`;
+
     modalBody.innerHTML =
       `<div class="numo-result">
-         <div class="numo-number">${num}</div>
+         <span class="numo-toplabel">Life Path — the road you're walking</span>
+         <div class="numo-number">${life}</div>
          <h4 class="numo-title">${info.title}</h4>
          <p class="numo-text">${info.text}</p>
-       </div>`;
+       </div>
+       <div class="numo-grid">${tiles}</div>
+       ${namePrompt}`;
     setActions([
-      { label: "Try another date", primary: true, on: () => renderNumerologyForm(s) },
-      { label: "Ask Vesper about it →", on: () => prefillChat(`My life path number is ${num}. What should I focus on this year?`) }
+      { label: "Try again", primary: true, on: () => renderNumerologyForm(s) },
+      { label: "Ask Vesper about it →", on: () => prefillChat(`My life path number is ${life}${name ? `, expression ${expression}, soul urge ${soul}` : ""}. What should I focus on this year?`) }
     ]);
+  }
+
+  /* ---- Birth chart / astrology ---------------------------------- */
+  // Tropical Sun sign from month/day (standard cusp dates).
+  const ZODIAC = [
+    { name: "Capricorn", glyph: "♑", from: [12, 22], to: [1, 19] },
+    { name: "Aquarius", glyph: "♒", from: [1, 20], to: [2, 18] },
+    { name: "Pisces", glyph: "♓", from: [2, 19], to: [3, 20] },
+    { name: "Aries", glyph: "♈", from: [3, 21], to: [4, 19] },
+    { name: "Taurus", glyph: "♉", from: [4, 20], to: [5, 20] },
+    { name: "Gemini", glyph: "♊", from: [5, 21], to: [6, 20] },
+    { name: "Cancer", glyph: "♋", from: [6, 21], to: [7, 22] },
+    { name: "Leo", glyph: "♌", from: [7, 23], to: [8, 22] },
+    { name: "Virgo", glyph: "♍", from: [8, 23], to: [9, 22] },
+    { name: "Libra", glyph: "♎", from: [9, 23], to: [10, 22] },
+    { name: "Scorpio", glyph: "♏", from: [10, 23], to: [11, 21] },
+    { name: "Sagittarius", glyph: "♐", from: [11, 22], to: [12, 21] }
+  ];
+  const SIGN_INFO = {
+    Aries:       { el: "Fire",  mo: "Cardinal", ruler: "Mars",    p: "The initiator — bold, direct, and allergic to standing still. You lead by leaping. Learn patience and you're unstoppable." },
+    Taurus:      { el: "Earth", mo: "Fixed",    ruler: "Venus",   p: "The builder of comfort and worth. Steady, sensual, loyal to a fault. You bloom slowly and last long. Guard against stubbornness." },
+    Gemini:      { el: "Air",   mo: "Mutable",  ruler: "Mercury", p: "The messenger — quick, curious, endlessly plural. You collect ideas and people. Choose a few threads to follow all the way down." },
+    Cancer:      { el: "Water", mo: "Cardinal", ruler: "the Moon", p: "The keeper of home and heart. You feel everything and remember it all. Your care is a superpower; build a shell you can open at will." },
+    Leo:         { el: "Fire",  mo: "Fixed",    ruler: "the Sun", p: "The radiant one — warm, generous, born to be seen. You lead with heart. The work is to shine without needing the applause." },
+    Virgo:       { el: "Earth", mo: "Mutable",  ruler: "Mercury", p: "The craftsperson — precise, useful, quietly devoted. You perfect what others leave rough. Let 'good enough' be holy sometimes." },
+    Libra:       { el: "Air",   mo: "Cardinal", ruler: "Venus",   p: "The harmoniser — fair, charming, allergic to ugliness and injustice. You balance the room. Learn to weigh your own needs on the scale too." },
+    Scorpio:     { el: "Water", mo: "Fixed",    ruler: "Pluto & Mars", p: "The alchemist — intense, magnetic, unafraid of the depths. You transform whatever you touch. Trust is your treasure; spend it wisely." },
+    Sagittarius: { el: "Fire",  mo: "Mutable",  ruler: "Jupiter", p: "The seeker — restless, honest, hungry for the horizon. You chase meaning and freedom. Root your wanderings in something you return to." },
+    Capricorn:   { el: "Earth", mo: "Cardinal", ruler: "Saturn",  p: "The architect of the long game — disciplined, ambitious, wry. You climb steadily and arrive. Remember the summit is meant to be enjoyed." },
+    Aquarius:    { el: "Air",   mo: "Fixed",    ruler: "Uranus & Saturn", p: "The visionary — original, humane, a little ahead of the room. You see the future's shape. Let people close, not just causes." },
+    Pisces:      { el: "Water", mo: "Mutable",  ruler: "Neptune & Jupiter", p: "The dreamer — compassionate, intuitive, porous to the unseen. You feel the ocean everyone swims in. Protect your shoreline and create from the tide." }
+  };
+  function sunSign(month, day) {
+    for (const z of ZODIAC) {
+      const [fm, fd] = z.from, [tm, td] = z.to;
+      if (fm === 12) { if ((month === 12 && day >= fd) || (month === 1 && day <= td)) return z; }
+      else if ((month === fm && day >= fd) || (month === tm && day <= td)) return z;
+    }
+    return ZODIAC[0];
+  }
+  // UTC offset (hours) for an IANA timezone at a given local date — via Intl.
+  function tzOffsetHours(ianaTZ, y, m, d) {
+    try {
+      const dtf = new Intl.DateTimeFormat("en-US", { timeZone: ianaTZ, timeZoneName: "shortOffset", year: "numeric" });
+      const dateAt = new Date(Date.UTC(y, m - 1, d, 12));
+      const part = dtf.formatToParts(dateAt).find((p) => p.type === "timeZoneName");
+      const mtch = part && part.value.match(/GMT([+-]\d{1,2})(?::(\d{2}))?/);
+      if (!mtch) return 0;
+      return parseInt(mtch[1], 10) + (mtch[2] ? Math.sign(parseInt(mtch[1], 10)) * (parseInt(mtch[2], 10) / 60) : 0);
+    } catch (e) { return 0; }
+  }
+
+  function renderAstrologyForm(s) {
+    modalEyebrow.textContent = "Birth Chart";
+    modalTitle.textContent = "Map your natal sky";
+    modalLead.textContent = "Your birth date gives your Sun sign instantly. Add your exact time and place to unlock your Moon, Rising, and planets.";
+    modalActions.innerHTML = "";
+    modalBody.innerHTML =
+      `<form class="modal-form" id="astro-form">
+         <label for="astro-name">Your name <span class="form-hint">(optional)</span></label>
+         <input id="astro-name" type="text" placeholder="e.g. Ada" autocomplete="off" />
+         <label for="astro-date">Date of birth</label>
+         <input id="astro-date" type="date" required max="2026-12-31" />
+         <label for="astro-time">Time of birth <span class="form-hint">(optional — needed for Moon &amp; Rising)</span></label>
+         <input id="astro-time" type="time" />
+         <label for="astro-place">Place of birth <span class="form-hint">(optional — city, country)</span></label>
+         <input id="astro-place" type="text" placeholder="e.g. London, United Kingdom" autocomplete="off" />
+         <button type="submit" class="btn btn-primary">Cast my chart</button>
+       </form>`;
+    document.getElementById("astro-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const date = document.getElementById("astro-date").value;
+      if (!date) return;
+      renderAstrologyResult(s, {
+        name: document.getElementById("astro-name").value.trim(),
+        date: date,
+        time: document.getElementById("astro-time").value,
+        place: document.getElementById("astro-place").value.trim()
+      });
+    });
+    setTimeout(() => document.getElementById("astro-date").focus(), 100);
+  }
+
+  function planetTable(list) {
+    if (!list || !list.length) return "";
+    const rows = list.map((p) =>
+      `<tr><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.sign)}</td>` +
+      `<td>${p.house != null ? "House " + escapeHtml(String(p.house)) : "—"}</td></tr>`).join("");
+    return `<table class="astro-table"><thead><tr><th>Planet</th><th>Sign</th><th>House</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  async function renderAstrologyResult(s, inp) {
+    const parts = inp.date.split("-").map(Number); // [yyyy, mm, dd]
+    const sun = sunSign(parts[1], parts[2]);
+    const info = SIGN_INFO[sun.name];
+
+    modalEyebrow.textContent = "Birth Chart";
+    modalTitle.textContent = inp.name ? `${inp.name}'s natal sky` : "Your natal sky";
+    modalLead.textContent = "";
+    // Sun sign renders instantly; the rest streams in below.
+    modalBody.innerHTML =
+      `<div class="astro-hero">
+         <div class="astro-sun-glyph">${sun.glyph}</div>
+         <div>
+           <span class="astro-kicker">Sun in</span>
+           <h4 class="astro-sign">${sun.name}</h4>
+           <div class="astro-chips"><span>${info.el}</span><span>${info.mo}</span><span>Ruled by ${info.ruler}</span></div>
+         </div>
+       </div>
+       <p class="astro-profile">${info.p}</p>
+       <div id="astro-more"></div>`;
+    setActions([
+      { label: "Cast another", primary: true, on: () => renderAstrologyForm(s) },
+      { label: "Ask Vesper about it →", on: () => prefillChat(`I'm a ${sun.name} sun. What should I lean into this season?`) }
+    ]);
+
+    const more = document.getElementById("astro-more");
+    // Full chart requires time + place (for Moon/Rising/houses)
+    if (!inp.time || !inp.place) {
+      more.innerHTML = `<p class="astro-note">Add your <strong>birth time</strong> and <strong>place</strong> and cast again to reveal your Moon, Rising sign, and the full planetary chart.</p>`;
+      return;
+    }
+    more.innerHTML = `<p class="astro-loading">Reading the rest of your sky…</p>`;
+
+    try {
+      // 1) geocode the birthplace (free, no key)
+      const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(inp.place)}&count=1&language=en&format=json`);
+      const geo = await geoRes.json();
+      const loc = geo && geo.results && geo.results[0];
+      if (!loc) { more.innerHTML = `<p class="astro-note">Couldn't find “${escapeHtml(inp.place)}”. Try a nearby larger city, e.g. “Paris, France”.</p>`; return; }
+
+      const [hh, mm] = inp.time.split(":").map(Number);
+      const tz = tzOffsetHours(loc.timezone, parts[0], parts[1], parts[2]);
+
+      // 2) ask our serverless proxy for the full chart
+      const res = await fetch("/api/natal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          year: parts[0], month: parts[1], date: parts[2],
+          hours: hh, minutes: mm, latitude: loc.latitude, longitude: loc.longitude, tzOffset: tz
+        })
+      });
+      const placeLabel = `${loc.name}${loc.country ? ", " + loc.country : ""}`;
+
+      if (res.status === 501) {
+        more.innerHTML =
+          `<p class="astro-note">Your Sun sign is set. The full planetary chart turns on once the astrology API key is configured on the server.</p>
+           <p class="astro-meta">Born ${escapeHtml(inp.date)} at ${escapeHtml(inp.time)} · ${escapeHtml(placeLabel)}</p>`;
+        return;
+      }
+      const data = await res.json();
+      if (!res.ok || !data.normalized || !data.normalized.length) {
+        more.innerHTML = `<p class="astro-note">The chart service didn't return usable data this time — your Sun reading above still stands. ${data && data.message ? escapeHtml(data.message) : ""}</p>`;
+        return;
+      }
+
+      const find = (n) => data.normalized.find((p) => p.name.toLowerCase() === n);
+      const moon = find("moon"), asc = find("ascendant") || find("rising");
+      let big = "";
+      if (moon || asc) {
+        big = `<div class="astro-bigthree">`;
+        big += `<div class="astro-bt"><span>Sun</span><strong>${sun.name}</strong></div>`;
+        if (moon) big += `<div class="astro-bt"><span>Moon</span><strong>${escapeHtml(moon.sign)}</strong></div>`;
+        if (asc) big += `<div class="astro-bt"><span>Rising</span><strong>${escapeHtml(asc.sign)}</strong></div>`;
+        big += `</div>`;
+      }
+      more.innerHTML =
+        big +
+        `<h5 class="astro-subhead">The wandering planets</h5>` +
+        planetTable(data.normalized) +
+        `<p class="astro-meta">Born ${escapeHtml(inp.date)} at ${escapeHtml(inp.time)} · ${escapeHtml(placeLabel)}</p>`;
+    } catch (err) {
+      more.innerHTML = `<p class="astro-note">Couldn't reach the chart service just now — your Sun reading above still holds. Try again in a moment.</p>`;
+    }
   }
 
   function renderDreamForm(s) {

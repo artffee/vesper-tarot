@@ -18,3 +18,9 @@ Thumbs.db
 _demo_*.html
 _mnav.html
 _fdebug.html
+
+.vercel
+
+# Unused illustrated-deck source images (~167MB) — kept locally, not committed
+# or deployed. If the illustrated deck is revived, compress these first.
+assets/cards/
